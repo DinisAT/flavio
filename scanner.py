@@ -1,6 +1,6 @@
 import pandas as pd
 
-def scan_for_signals(df, ticker):
+def scan_for_signals(df, ticker, rsi_oversold=30, rsi_overbought=70):
     """
     Analyzes the latest data in df for specific swing trade entry signals.
     Returns a list of signal dictionaries.
@@ -37,14 +37,18 @@ def scan_for_signals(df, ticker):
         signals.append({'ticker': ticker, 'type': 'Breakout', 'detail': f'New 20-day high with {rel_vol:.2f}x vol', 'conviction': 2})
 
     # --- 3. Mean Reversion Signal ---
-    if rsi < 35:
-        detail = f'RSI Oversold ({rsi:.2f})'
+    if rsi <= rsi_oversold:
+        detail = f"RSI Oversold ({rsi:.2f})"
         conv = 1
-        if latest['CDL_BULLISH_ENGULFING'] > 0 or latest['CDL_HAMMER'] > 0 or latest['CDL_MORNING_STAR'] > 0:
-            detail += ' + Bullish Candle'
+        if latest["CDL_BULLISH_ENGULFING"] > 0 or latest["CDL_HAMMER"] > 0 or latest["CDL_MORNING_STAR"] > 0:
+            detail += " + Bullish Candle"
             conv = 3
-        signals.append({'ticker': ticker, 'type': 'Mean Reversion', 'detail': detail, 'conviction': conv})
+        signals.append({"ticker": ticker, "type": "Mean Reversion", "detail": detail, "conviction": conv})
 
+    # OPTIONAL: Overbought signal if you want to use that slider too
+    if rsi >= rsi_overbought:
+        signals.append({"ticker": ticker, "type": "Overbought", "detail": f"RSI Overbought ({rsi:.2f})", "conviction": 1})
+    
     # --- 4. Momentum Cross ---
     if prev['EMA_9'] <= prev['EMA_20'] and latest['EMA_9'] > latest['EMA_20']:
         signals.append({'ticker': ticker, 'type': 'Momentum', 'detail': 'EMA 9 cross above EMA 20', 'conviction': 1})

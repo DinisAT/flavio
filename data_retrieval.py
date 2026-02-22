@@ -12,6 +12,8 @@ def get_sp500_tickers():
         table = pd.read_html(StringIO(response.text))[0]
         return table['Symbol'].tolist()
     except Exception as e:
+        if raise_on_error:
+            raise
         print(f"Error fetching S&P 500 tickers: {e}")
         return []
 
